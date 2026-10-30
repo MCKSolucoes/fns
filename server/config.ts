@@ -51,7 +51,7 @@ function getSupabaseUrl(value: string | undefined): string | undefined {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
-  const fnsTimeoutMs = positiveInteger(env.FNS_TIMEOUT_MS, 10_000, 'FNS_TIMEOUT_MS')
+  const fnsTimeoutMs = positiveInteger(env.FNS_TIMEOUT_MS, 25_000, 'FNS_TIMEOUT_MS')
   if (fnsTimeoutMs > 60_000) throw new Error('FNS_TIMEOUT_MS não pode exceder 60000.')
   const supabaseUrl = getSupabaseUrl(env.SUPABASE_URL)
   const supabaseAnonKey = env.SUPABASE_ANON_KEY?.trim() || undefined

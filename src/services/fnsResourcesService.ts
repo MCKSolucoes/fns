@@ -158,6 +158,35 @@ async function getResultado<T>(url: string, isItem: (item: unknown) => item is T
   }
 }
 
+
+const CURRENT_YEAR = new Date().getFullYear()
+export const DEFAULT_ANOS: AnoOption[] = Array.from({ length: CURRENT_YEAR - 1997 }, (_, i) => {
+  const y = String(CURRENT_YEAR - i)
+  return { valor: y, descricao: y }
+})
+
+export const DEFAULT_MESES: MesOption[] = [
+  { valor: 1, descricao: 'Janeiro' },
+  { valor: 2, descricao: 'Fevereiro' },
+  { valor: 3, descricao: 'Março' },
+  { valor: 4, descricao: 'Abril' },
+  { valor: 5, descricao: 'Maio' },
+  { valor: 6, descricao: 'Junho' },
+  { valor: 7, descricao: 'Julho' },
+  { valor: 8, descricao: 'Agosto' },
+  { valor: 9, descricao: 'Setembro' },
+  { valor: 10, descricao: 'Outubro' },
+  { valor: 11, descricao: 'Novembro' },
+  { valor: 12, descricao: 'Dezembro' },
+]
+
+export const DEFAULT_REPASSES: RepasseOption[] = [
+  { valor: 1, descricao: 'Ação Judicial' },
+  { valor: 2, descricao: 'Estadual' },
+  { valor: 3, descricao: 'Municipal' },
+  { valor: 4, descricao: 'Prestador' },
+]
+
 export const fnsResourcesService = {
   async getConsultas(filters: FnsConsultationFilters, page: number, count: number, signal?: AbortSignal): Promise<FnsConsultationResponse> {
     const params = new URLSearchParams()
@@ -221,16 +250,24 @@ export const fnsResourcesService = {
   },
 
   async getAnos(refresh = false): Promise<AnoOption[]> {
-    const items = await getResultado(`${API_BASE}/anos`, isAno, refresh)
-    return [...items].sort((a, b) => Number(b.valor) - Number(a.valor))
+    try {
+      const items = await getResultado(`${API_BASE}/anos`, isAno, refresh)
+      return [...items].sort((a, b) => Number(b.valor) - Number(a.valor))
+    } catch {
+      return DEFAULT_ANOS
+    }
   },
 
   getTiposConsulta(ano: string, refresh = false): Promise<TipoConsultaOption[]> {
     return getResultado(`${API_BASE}/tipos-consulta/${encodeURIComponent(ano)}`, isTipoConsulta, refresh)
   },
 
-  getRepasses(refresh = false): Promise<RepasseOption[]> {
-    return getResultado(`${API_BASE}/repasses`, isRepasse, refresh)
+  async getRepasses(refresh = false): Promise<RepasseOption[]> {
+    try {
+      return await getResultado(`${API_BASE}/repasses`, isRepasse, refresh)
+    } catch {
+      return DEFAULT_REPASSES
+    }
   },
 
   getUfs(refresh = false): Promise<UfOption[]> {
@@ -247,7 +284,11 @@ export const fnsResourcesService = {
   },
 
   async getMeses(refresh = false): Promise<MesOption[]> {
-    const items = await getResultado(`${API_BASE}/meses`, isMes, refresh)
-    return [...items].sort((a, b) => a.valor - b.valor)
+    try {
+      const items = await getResultado(`${API_BASE}/meses`, isMes, refresh)
+      return [...items].sort((a, b) => a.valor - b.valor)
+    } catch {
+      return DEFAULT_MESES
+    }
   },
 }

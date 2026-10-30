@@ -6,26 +6,19 @@ import { loadConfig, type ServerConfig } from '../../server/config.js'
 const app = new Hono<{ Bindings: Record<string, string | undefined> }>()
 
 let cachedApp: ReturnType<typeof createApp> | null = null
-let cachedConfigured = false
 
 app.all('*', async (c) => {
-  const rawEnv = (c.env || {}) as Record<string, string | undefined>
-  const origin = rawEnv.FRONTEND_ORIGIN || new URL(c.req.url).origin
-
-  if (!cachedApp || !cachedConfigured) {
+  if (!cachedApp) {
+    const rawEnv = (c.env || {}) as Record<string, string | undefined>
+    const origin = rawEnv.FRONTEND_ORIGIN || new URL(c.req.url).origin
     const config: ServerConfig = loadConfig({
       ...rawEnv,
+      FNS_TIMEOUT_MS: rawEnv.FNS_TIMEOUT_MS || '25000',
       FRONTEND_ORIGIN: origin,
     })
-    const appInstance = createApp(config)
-    if (config.supabaseUrl && config.supabaseAnonKey) {
-      cachedApp = appInstance
-      cachedConfigured = true
-    }
-    return appInstance.fetch(c.req.raw, c.env, c.executionCtx)
+    cachedApp = createApp(config)
   }
-  return cachedApp.fetch(c.req.raw, c.env, c.executionCtx)
+  return cachedApp.fetch(c.req.raw)
 })
 
 export const onRequest = handle(app)
-
