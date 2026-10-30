@@ -1,5 +1,6 @@
 import type { FnsMunicipalLeadership, FnsMunicipalLeadershipResponse } from '../types/fnsLeadership'
 import { FnsResourceError } from './fnsResourcesService'
+import { getStoredAccessToken } from './authClient'
 
 const API_BASE = '/api/fns'
 
@@ -29,9 +30,13 @@ export async function getFnsMunicipalLeadership(
 
   let response: Response
   try {
+    const token = getStoredAccessToken()
     response = await fetch(`${API_BASE}/dirigente/${encodeURIComponent(ibgeCode)}`, {
       method: 'GET',
-      headers: { Accept: 'application/json' },
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       credentials: 'omit',
       signal,
     })

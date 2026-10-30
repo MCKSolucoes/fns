@@ -7,6 +7,8 @@ export interface ServerConfig {
   supabaseAnonKey?: string
   supabaseServiceRoleKey?: string
   supabaseTestMode?: boolean
+  authRequired?: boolean
+  turnstileSiteKey?: string
 }
 
 function positiveInteger(value: string | undefined, fallback: number, name: string): number {
@@ -54,6 +56,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   const supabaseAnonKey = env.SUPABASE_ANON_KEY?.trim() || undefined
   const supabaseServiceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim() || undefined
   const supabaseTestMode = env.SUPABASE_TEST_MODE === 'true'
+  const authRequired = !supabaseTestMode
+  const turnstileSiteKey = env.TURNSTILE_SITE_KEY?.trim() || '0x4AAAAAADvjK71xxwbhyLy2'
   if (Boolean(supabaseUrl) !== Boolean(supabaseAnonKey)) {
     throw new Error('Configure SUPABASE_URL e SUPABASE_ANON_KEY juntos.')
   }
@@ -78,5 +82,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
     ...(supabaseUrl && supabaseAnonKey ? { supabaseUrl, supabaseAnonKey } : {}),
     ...(supabaseServiceRoleKey ? { supabaseServiceRoleKey } : {}),
     supabaseTestMode,
+    authRequired,
+    turnstileSiteKey,
   }
 }

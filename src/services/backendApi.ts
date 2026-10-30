@@ -1,3 +1,5 @@
+import { getStoredAccessToken } from './authClient'
+
 export class BackendApiError extends Error {
 	readonly status: number
 	readonly code: string
@@ -15,6 +17,7 @@ export async function backendRequest<T>(
 	accessToken = '',
 	options: { method?: 'GET' | 'POST' | 'PATCH' | 'DELETE'; body?: unknown } = {},
 ): Promise<T> {
+	const token = accessToken || getStoredAccessToken() || ''
 	let response: Response
 	try {
 		response = await fetch(path, {
@@ -22,7 +25,7 @@ export async function backendRequest<T>(
 			credentials: 'same-origin',
 			headers: {
 				Accept: 'application/json',
-				Authorization: `Bearer ${accessToken}`,
+				...(token ? { Authorization: `Bearer ${token}` } : {}),
 				...(options.body === undefined ? {} : { 'Content-Type': 'application/json' }),
 				...((options.method ?? 'GET') === 'GET' ? {} : { 'X-Requested-With': 'XMLHttpRequest' }),
 			},
@@ -39,6 +42,13 @@ export async function backendRequest<T>(
 	try {
 		payload = await response.json() as unknown
 	} catch {
+		if (response.status === 502) {
+			throw new BackendApiError(
+				'O servidor backend FNS (porta 3001) não está em execução. Certifique-se de que o backend foi iniciado (npm run dev:server).',
+				response.status,
+				'BACKEND_502',
+			)
+		}
 		throw new BackendApiError('O backend retornou uma resposta inválida.', response.status, 'INVALID_RESPONSE')
 	}
 	if (!response.ok) {

@@ -13,6 +13,7 @@ import type { FnsMunicipalLeadership, FnsMunicipalLeadershipResponse } from '../
 import { getActivePartnerMunicipality, getActivePartnerMunicipalities, partnerStates } from '../src/data/partnerMunicipalities.js'
 import type { ServerConfig } from './config.js'
 import { createSupabaseApi } from './supabaseApi.js'
+import { createAuth } from './auth.js'
 
 const FNS_RESOURCES_BASE = 'https://consultafns.saude.gov.br/recursos'
 const RESOURCE_CACHE_TTL_MS = 6 * 60 * 60 * 1000
@@ -245,6 +246,9 @@ export function createApp(
     }))
   })
 
+  const auth = createAuth(config, fetcher, logger)
+  app.use('/api/*', auth.guard)
+  app.route('/api', auth.api)
   app.route('/api', createSupabaseApi(config, fetcher, logger))
 
   async function fetchJson(url: string, source = 'O portal FNS'): Promise<unknown> {

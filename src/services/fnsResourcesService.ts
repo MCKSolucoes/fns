@@ -1,5 +1,6 @@
 import type { AnoOption, BlocoOption, MesOption, MunicipioOption, RepasseOption, TipoConsultaOption, UfOption } from '../types/fnsResources'
 import type { FnsConsultationFilters, FnsConsultationResponse } from '../types/fnsConsultation'
+import { getStoredAccessToken } from './authClient'
 
 const API_BASE = '/api/fns'
 const responseCache = new Map<string, { promise: Promise<unknown[]>; value?: unknown[] }>()
@@ -69,12 +70,20 @@ function isFnsConsultationResponse(value: unknown): value is FnsConsultationResp
 }
 
 async function fetchResultado<T>(url: string, isItem: (item: unknown) => item is T): Promise<T[]> {
+  const token = getStoredAccessToken()
   let response: Response
   try {
-    response = await fetch(url, { method: 'GET', headers: { Accept: 'application/json' }, credentials: 'omit' })
+    response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      credentials: 'omit',
+    })
   } catch (error) {
     if (error instanceof TypeError) {
-      throw new FnsResourceError('Não foi possível conectar ao backend FNS. Verifique a conexão e tente novamente.', true)
+      throw new FnsResourceError('Não foi possível conectar ao backend FNS. Verifique se o servidor está em execução (npm run dev:server).', true)
     }
     throw error
   }
@@ -86,15 +95,19 @@ async function fetchResultado<T>(url: string, isItem: (item: unknown) => item is
     } catch {
       body = null
     }
+    const contentType = response.headers.get('content-type') ?? ''
+    const isHtml = contentType.includes('text/html')
     const message = typeof body?.error?.message === 'string'
       ? body.error.message
-      : response.status === 502
-        ? 'O portal FNS está temporariamente indisponível (HTTP 502).'
-        : response.status === 503
-          ? 'O portal FNS está temporariamente indisponível (HTTP 503).'
-          : response.status === 504
-            ? 'A consulta ao portal FNS excedeu o tempo limite (timeout).'
-            : `A API FNS respondeu com HTTP ${response.status}.`
+      : response.status === 502 && isHtml
+        ? 'O servidor backend FNS (porta 3001) não está em execução. Certifique-se de que o backend foi iniciado (npm run dev:server).'
+        : response.status === 502
+          ? 'O portal FNS está temporariamente indisponível (HTTP 502).'
+          : response.status === 503
+            ? 'O portal FNS está temporariamente indisponível (HTTP 503).'
+            : response.status === 504
+              ? 'A consulta ao portal FNS excedeu o tempo limite (timeout).'
+              : `A API FNS respondeu com HTTP ${response.status}.`
     const retryable = typeof body?.error?.retryable === 'boolean'
       ? body.error.retryable
       : [502, 503, 504].includes(response.status)
@@ -153,17 +166,21 @@ export const fnsResourcesService = {
     }
     params.set('page', String(page))
     params.set('count', String(count))
+    const token = getStoredAccessToken()
     let response: Response
     try {
       response = await fetch(`${API_BASE}/consultas?${params}`, {
         method: 'GET',
-        headers: { Accept: 'application/json' },
+        headers: {
+          Accept: 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         credentials: 'omit',
         signal,
       })
     } catch (error) {
       if (error instanceof TypeError) {
-        throw new FnsResourceError('Não foi possível conectar à API local do FNS. Verifique se o backend está em execução.', true)
+        throw new FnsResourceError('Não foi possível conectar à API local do FNS. Verifique se o backend está em execução (npm run dev:server).', true)
       }
       throw error
     }
@@ -172,7 +189,13 @@ export const fnsResourcesService = {
     try {
       body = await response.json() as unknown
     } catch {
-      if (!response.ok) throw new FnsResourceError(`A API FNS respondeu com HTTP ${response.status}.`, [502, 503, 504].includes(response.status))
+      if (!response.ok) {
+        const isHtml = (response.headers.get('content-type') ?? '').includes('text/html')
+        if (response.status === 502 && isHtml) {
+          throw new FnsResourceError('O servidor backend FNS (porta 3001) não está em execução. Certifique-se de que o backend foi iniciado (npm run dev:server).', true)
+        }
+        throw new FnsResourceError(`A API FNS respondeu com HTTP ${response.status}.`, [502, 503, 504].includes(response.status))
+      }
       throw new FnsResourceError('A API FNS retornou uma resposta que não é JSON válido.')
     }
     if (!response.ok) {

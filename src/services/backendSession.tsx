@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type PropsWithChildren } from 'react'
+import { useAuth } from './authSession'
 
 interface BackendSessionContextValue {
 	accessToken: string
@@ -35,12 +36,14 @@ function storageErrorMessage(code: string): string {
 }
 
 export function BackendSessionProvider({ children }: PropsWithChildren) {
-	const [accessToken, setAccessToken] = useState('')
+	const { accessToken, authRequired } = useAuth()
 	const [testStorageEnabled, setTestStorageEnabled] = useState(false)
-	const [sharedStorageLoading, setSharedStorageLoading] = useState(true)
-	const [sharedStorageError, setSharedStorageError] = useState('')
+	const [testStorageLoading, setTestStorageLoading] = useState(true)
+	const [testStorageError, setTestStorageError] = useState('')
 
 	useEffect(() => {
+		if (authRequired) return
+
 		let active = true
 		fetch('/api/storage/status', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
 			.then(async (response) => {
@@ -64,21 +67,24 @@ export function BackendSessionProvider({ children }: PropsWithChildren) {
 				}
 				if (active) {
 					setTestStorageEnabled(value.sharedStorageEnabled)
-					setSharedStorageError('')
+					setTestStorageError('')
 				}
 			})
 			.catch((error: unknown) => {
-				if (active) setSharedStorageError(error instanceof Error ? error.message : 'Não foi possível verificar a conexão compartilhada.')
+				if (active) setTestStorageError(error instanceof Error ? error.message : 'Não foi possível verificar a conexão compartilhada.')
 			})
 			.finally(() => {
-				if (active) setSharedStorageLoading(false)
+				if (active) setTestStorageLoading(false)
 			})
 		return () => { active = false }
-	}, [])
+	}, [authRequired])
+
+	const sharedStorageLoading = authRequired ? false : testStorageLoading
+	const sharedStorageError = authRequired ? '' : testStorageError
 
 	return <BackendSessionContext.Provider value={{
 		accessToken,
-		setAccessToken,
+		setAccessToken: () => {},
 		hasSharedAccess: Boolean(accessToken) || testStorageEnabled,
 		sharedStorageLoading,
 		sharedStorageError,

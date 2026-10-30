@@ -1,5 +1,6 @@
 import type { FnsBlockTotal, FnsFinancialAction, FnsFinancialFilters, FnsFinancialResponse } from '../types/fnsFinancial'
 import { FnsResourceError } from './fnsResourcesService'
+import { getStoredAccessToken } from './authClient'
 
 const API_BASE = '/api/fns'
 const FINANCIAL_CACHE_TTL_MS = 5 * 60 * 1000
@@ -241,9 +242,13 @@ export function clearFnsFinancialPageCache(): void {
 async function fetchFnsFinancialPage(params: URLSearchParams): Promise<FnsFinancialResponse> {
   let response: Response
   try {
+    const token = getStoredAccessToken()
     response = await fetch(`${API_BASE}/detalhe-acao?${params}`, {
       method: 'GET',
-      headers: { Accept: 'application/json' },
+      headers: {
+        Accept: 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       credentials: 'omit',
     })
   } catch (error) {
