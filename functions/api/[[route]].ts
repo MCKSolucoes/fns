@@ -22,9 +22,9 @@ app.all('*', async (c) => {
       cachedApp = appInstance
       cachedConfigured = true
     }
-    return appInstance.fetch(c.req.raw)
+    return appInstance.fetch(c.req.raw, c.env, c.executionCtx)
   }
-  return cachedApp.fetch(c.req.raw)
+  return cachedApp.fetch(c.req.raw, c.env, c.executionCtx)
 })
 
 export const onRequest = handle(app)

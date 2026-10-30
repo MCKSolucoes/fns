@@ -262,7 +262,7 @@ export function createApp(
           method: 'GET',
           headers: { Accept: 'application/json' },
           signal: AbortSignal.timeout(config.fnsTimeoutMs),
-          redirect: 'error',
+          redirect: 'manual',
         })
       } catch (error) {
         const timeout = isTimeout(error)

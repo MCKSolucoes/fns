@@ -94,9 +94,10 @@ export function createAuth(
           apikey: config.supabaseAnonKey,
           Authorization: `Bearer ${token}`,
           Accept: 'application/json',
+          'User-Agent': 'MCK-FNS/1.0',
         },
         signal: AbortSignal.timeout(8000),
-        redirect: 'error',
+        redirect: 'manual',
       })
     } catch (err) {
       if (isTimeoutOrNetworkError(err)) {
@@ -136,9 +137,10 @@ export function createAuth(
             apikey: config.supabaseAnonKey,
             Authorization: `Bearer ${token}`,
             Accept: 'application/json',
+          'User-Agent': 'MCK-FNS/1.0',
           },
           signal: AbortSignal.timeout(8000),
-          redirect: 'error',
+          redirect: 'manual',
         },
       )
     } catch (err) {

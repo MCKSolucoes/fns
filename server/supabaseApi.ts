@@ -227,7 +227,7 @@ export function createSupabaseApi(
       response = await fetcher(`${supabase.url}${path}`, {
         ...init,
         headers,
-        redirect: 'error',
+        redirect: 'manual',
         signal: AbortSignal.timeout(8_000),
       })
     } catch (error) {
@@ -745,7 +745,7 @@ async function fetchFnsJson(url: string, config: ServerConfig, fetcher: typeof f
       method: 'GET',
       headers: { Accept: 'application/json' },
       signal: AbortSignal.timeout(config.fnsTimeoutMs),
-      redirect: 'error',
+      redirect: 'manual',
     })
   } catch {
     throw new Error('FNS_IMPORT_UNAVAILABLE')
