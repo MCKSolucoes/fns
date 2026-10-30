@@ -1,0 +1,32 @@
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@400;500;600;700;800&display=swap');
+@import 'tailwindcss';
+
+:root {
+  font-family: 'Lato', sans-serif;
+  color: #243128;
+  background: #f6f7f6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --green: #709e6c;
+  --green-dark: #4f7a4b;
+  --green-soft: #edf4e9;
+  --green-light: #c2eb99;
+  --sidebar-bg: #1f2421;
+  --admin-bg: #f6f7f6;
+  --surface: #ffffff;
+  --muted: #68756b;
+  --border: #c2c3c2;
+  --amber: #a86b10;
+  --red: #b34b46;
+  --blue: #47789b;
+}
+
+* { box-sizing: border-box; }
+body { min-width: 320px; min-height: 100vh; margin: 0; }
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+a { color: inherit; text-decoration: none; }
+::selection { background: #c2eb99; color: #243128; }
+:focus-visible { outline: 3px solid var(--green-light); outline-offset: 2px; }

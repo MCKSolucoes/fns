@@ -1,0 +1,38 @@
+{
+  "name": "mck-fns",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:server": "node --env-file-if-exists=.env --import tsx --watch server/index.ts",
+    "build:server": "tsc -p tsconfig.server.json",
+    "test": "npm run test:server",
+    "test:server": "tsx --test server/app.test.ts server/supabaseApi.test.ts tests/emendas.test.ts src/utils/monthlyInstallmentComparison.test.ts src/repositories/LocalStorageBaixasRepository.test.ts src/services/localDataMigration.test.ts",
+    "start:server": "node --env-file-if-exists=.env dist/server/index.js",
+    "build": "tsc -b && npm run build:server && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@hono/node-server": "^2.1.5",
+    "hono": "^4.13.13",
+    "lucide-react": "^1.59.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-router-dom": "^7.18.4",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.19.2",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.2",
+    "oxlint": "^1.88.0",
+    "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.15",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.4"
+  }
+}
