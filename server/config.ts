@@ -33,14 +33,15 @@ function getOrigin(value: string | undefined): string {
 }
 
 function getSupabaseUrl(value: string | undefined): string | undefined {
-  if (!value) return undefined
+  if (!value || !value.trim()) return undefined
+  const valueTrimmed = value.trim()
   let url: URL
   try {
-    url = new URL(value)
+    url = new URL(valueTrimmed)
   } catch {
     throw new Error('SUPABASE_URL deve ser uma URL válida.')
   }
-  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || url.pathname !== '/') {
+  if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password || (url.pathname !== '/' && url.pathname !== '')) {
     throw new Error('SUPABASE_URL deve conter somente a origem HTTPS do projeto.')
   }
   if (url.protocol !== 'https:' && !['localhost', '127.0.0.1'].includes(url.hostname)) {
@@ -54,7 +55,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): ServerConfig {
   if (fnsTimeoutMs > 60_000) throw new Error('FNS_TIMEOUT_MS não pode exceder 60000.')
   const supabaseUrl = getSupabaseUrl(env.SUPABASE_URL)
   const supabaseAnonKey = env.SUPABASE_ANON_KEY?.trim() || undefined
-  const supabaseServiceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim() || undefined
+  const supabaseServiceRoleKey = (env.SUPABASE_SERVICE_ROLE_KEY || (env as Record<string, string | undefined>).SUPABASE_SERVICE_ROLE_KE)?.trim() || undefined
   const supabaseTestMode = env.SUPABASE_TEST_MODE === 'true'
   const authRequired = !supabaseTestMode
   const turnstileSiteKey = env.TURNSTILE_SITE_KEY?.trim() || '0x4AAAAAADvjK71xxwbhyLy2'
